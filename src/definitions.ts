@@ -1,41 +1,4 @@
 import {PluginListenerHandle} from "@capacitor/core";
-export interface PluginsConfig {
-  TwilioVoice?: {
-    /**
-     * Text to show on the incoming call notification
-     *
-     * @example "Someone is calling you"
-     */
-    notificationText?:  string;
-
-    /**
-     * Title of the notification for an incoming call.
-     *
-     * @default Twilio
-     * @example "#FF9900"
-     */
-    notificationTitle?: string;
-
-    /**
-     * Name of the icon on the resource folder to be shown in the notification
-     *Just Android
-     * @default Twilio
-     * @example "#FF9900"
-     */
-    androidNotificationIcon?: string;
-
-    /**
-     * Name of the icon on the resource folder to be shown in the accept action in the notification
-     * Just Android
-     */
-    androidNotificationAcceptIcon?: string;
-    /**
-     * Name of the icon on the resource folder to be shown in the decline action in the notification
-     * Just Android
-     */
-    androidNotificationRejectIcon?: string;
-  };
-}
 
 export interface TwilioVoicePlugin {
   registerDevice(option: TwilioVoiceOptions): Promise<void>;
