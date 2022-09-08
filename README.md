@@ -67,12 +67,12 @@ disconnect() => Promise<void>
 ### sendDigits(...)
 
 ```typescript
-sendDigits(code: string) => Promise<void>
+sendDigits(options: SendDigitsOptions) => Promise<void>
 ```
 
-| Param      | Type                |
-| ---------- | ------------------- |
-| **`code`** | <code>string</code> |
+| Param         | Type                                                            |
+| ------------- | --------------------------------------------------------------- |
+| **`options`** | <code><a href="#senddigitsoptions">SendDigitsOptions</a></code> |
 
 --------------------
 
@@ -166,6 +166,13 @@ Removes all listeners
 | Prop              | Type                |
 | ----------------- | ------------------- |
 | **`accessToken`** | <code>string</code> |
+
+
+#### SendDigitsOptions
+
+| Prop       | Type                |
+| ---------- | ------------------- |
+| **`code`** | <code>string</code> |
 
 
 #### PluginListenerHandle

@@ -5,13 +5,10 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.jamper91.capacitor.twilio.voice.Constants;
-import com.jamper91.capacitor.twilio.voice.TwilioVoiceNotificationService;
-import com.jamper91.capacitor.twilio.voice.TwilioVoicePlugin;
 import com.twilio.voice.CallException;
 import com.twilio.voice.CallInvite;
 import com.twilio.voice.CancelledCallInvite;
@@ -64,26 +61,32 @@ public class VoiceFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onNewToken(String token) {
         super.onNewToken(token);
-//        Intent intent = new Intent(Constants.ACTION_FCM_TOKEN);
-//        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-//        TwilioVoicePlugin.registerForCallInvites();
     }
 
     private void handleInvite(CallInvite callInvite, int notificationId) {
         Log.i(TAG, "handleInvite");
-        Intent intent = new Intent(this, TwilioVoiceNotificationService.class);
-        intent.setAction(Constants.ACTION_INCOMING_CALL);
-        intent.putExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
-        intent.putExtra(Constants.INCOMING_CALL_INVITE, callInvite);
-        startService(intent);
+
+        Intent intent = getPackageManager()
+                .getLaunchIntentForPackage(getPackageName())
+                .setPackage(null)
+                .putExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId)
+                .putExtra(Constants.INCOMING_CALL_INVITE, callInvite)
+                .setAction(Constants.ACTION_INCOMING_CALL)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
 
     }
 
     private void handleCanceledCallInvite(CancelledCallInvite cancelledCallInvite) {
-        Intent intent = new Intent(this, TwilioVoiceNotificationService.class);
-        intent.setAction(Constants.ACTION_CANCEL_CALL);
-        intent.putExtra(Constants.CANCELLED_CALL_INVITE, cancelledCallInvite);
 
-        startService(intent);
+        Intent intent = getPackageManager()
+                .getLaunchIntentForPackage(getPackageName())
+                .setPackage(null)
+                .setAction(Constants.ACTION_CANCEL_CALL)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+
     }
 }

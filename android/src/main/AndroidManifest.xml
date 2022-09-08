@@ -1,17 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.jamper91.capacitor.twilio.voice">
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <application>
-
-        <service
-                android:enabled="true"
-                android:name=".TwilioVoiceNotificationService"
-                android:exported="false">
-            <intent-filter>
-                <action android:name="ACTION_ACCEPT" />
-                <action android:name="ACTION_REJECT" />
-            </intent-filter>
-        </service>
         <!-- [START fcm_listener] -->
         <service
                 android:name=".fcm.VoiceFirebaseMessagingService"

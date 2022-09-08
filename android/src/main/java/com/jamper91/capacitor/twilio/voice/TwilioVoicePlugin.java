@@ -5,6 +5,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.net.Uri;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.Window;
@@ -31,6 +33,8 @@ import com.twilio.voice.RegistrationException;
 import com.twilio.voice.RegistrationListener;
 import com.twilio.voice.Voice;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -51,7 +55,6 @@ import java.util.Set;
 public class TwilioVoicePlugin extends Plugin {
 
     private static final String TAG = "TwilioVoicePlugin";
-
     private static final int MIC_PERMISSION_REQUEST_CODE = 1;
     private static final int PERMISSIONS_REQUEST_CODE = 100;
     private String accessToken = "PASTE_YOUR_ACCESS_TOKEN_HERE";
@@ -75,28 +78,26 @@ public class TwilioVoicePlugin extends Plugin {
 
     RegistrationListener registrationListener = registrationListener();
     Call.Listener callListener = callListener();
-    TwilioVoiceNotificationService twilioVoiceNotificationService;
 
-    public static TwilioVoiceConfig twilioVoiceConfig;
-    public static TwilioVoiceNotification twilioVoiceNotification;
 
     public static Bridge staticBridge = null;
     private static String fcmToken;
     @Override
     public void load() {
+
         // These flags ensure that the activity can be launched when the screen is locked.
         Window window = getActivity().getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                 | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
                 | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        this.twilioVoiceConfig = new TwilioVoiceConfig(getConfig(), getContext());
-        this.twilioVoiceNotification = new TwilioVoiceNotification(this.twilioVoiceConfig, getContext());
-        this.twilioVoiceNotificationService = new TwilioVoiceNotificationService();
+
         staticBridge = this.bridge;
         audioSwitch = new AudioSwitch(getActivity());
         savedVolumeControlStream = getActivity().getVolumeControlStream();
         getActivity().setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+
+
     }
 
     //region Capacitor
@@ -147,10 +148,15 @@ public class TwilioVoicePlugin extends Plugin {
     public void sendDigits(PluginCall call) {
 
         String code = call.getString("code");
+        if(code == null) {
+            call.reject("Code not valid");
+        }
         if(activeCall != null) {
             activeCall.sendDigits(code);
+            call.resolve();
+        } else {
+            call.reject("Active call not valid");
         }
-        call.resolve();
     }
 
     @PermissionCallback
@@ -174,7 +180,9 @@ public class TwilioVoicePlugin extends Plugin {
     //region Twilio Voice Android
 
 
+
     private void registerDeviceOnTwilio(PluginCall call){
+
         Log.i(TAG, "registerDeviceOnTwilio");
         String accessTokenP = call.getString("accessToken");
         this.accessToken =  accessTokenP;
@@ -330,37 +338,22 @@ public class TwilioVoicePlugin extends Plugin {
     @Override
     protected void handleOnNewIntent(Intent data) {
         super.handleOnNewIntent(data);
-        handleIncomingCallIntent(data);
+        if (data != null && data.getAction() != null) {
+            String action = data.getAction();
+            activeCallInvite = data.getParcelableExtra(Constants.INCOMING_CALL_INVITE);
+            activeCallNotificationId = data.getIntExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, 0);
+            switch (action) {
+                case Constants.ACTION_INCOMING_CALL:
+                    handleIncomingCall(activeCallInvite, activeCallNotificationId);
+                    break;
 
-    }
-    public static void handleIncomingCallIntent(Intent intent) {
-        Log.i(TAG, "handleIncomingCallIntent");
-//        if (intent != null && intent.getAction() != null) {
-//            String action = intent.getAction();
-//            activeCallInvite = intent.getParcelableExtra(Constants.INCOMING_CALL_INVITE);
-//            activeCallNotificationId = intent.getIntExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, 0);
-//            JSObject ret = new JSObject();
-//            switch (action) {
-//                case Constants.ACTION_INCOMING_CALL:
-//                    notifyCapacitor("incomingCall", ret, false);
-//                    break;
-//                case Constants.ACTION_INCOMING_CALL_NOTIFICATION:
-//                    notifyCapacitor("incomingCall", ret, false);
-//                    break;
-//                case Constants.ACTION_CANCEL_CALL:
-//                    notifyCapacitor("callCancel", ret, false);
-//                    break;
-//                case Constants.ACTION_FCM_TOKEN:
-//                    registerForCallInvites();
-//                    break;
-//                case Constants.ACTION_ACCEPT:
-////                    answer();
-//                    notifyCapacitor("callAccepted", ret, false);
-//                    break;
-//                default:
-//                    break;
-//            }
-//        }
+                case Constants.ACTION_CANCEL_CALL:
+                    handleCallCanceled();
+                    break;
+            }
+
+        }
+
     }
 
 
@@ -376,7 +369,7 @@ public class TwilioVoicePlugin extends Plugin {
                  */
                 activeCallInvite = intent.getParcelableExtra(Constants.INCOMING_CALL_INVITE);
                 activeCallNotificationId = intent.getIntExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, 0);
-                handleIncomingCallIntent(intent);
+                handleIncomingCall(activeCallInvite, activeCallNotificationId);
             }
         }
 
@@ -398,28 +391,22 @@ public class TwilioVoicePlugin extends Plugin {
 
     //region Notifications
 
-    public static void handleIncomingCall(CallInvite callInvite, int notificationId){
+    public void handleIncomingCall(CallInvite callInvite, int notificationId){
         JSObject ret = new JSObject();
         activeCallInvite = callInvite;
         notifyCapacitor("incomingCall", ret, false);
-        twilioVoiceNotification.handleIncomingCall(callInvite, notificationId);
+
+
     }
 
-    public static void callAccepted(CallInvite callInvite, int notificationId){
-        JSObject ret = new JSObject();
-        notifyCapacitor("callAccepted", ret, false);
-    }
-
-    public static void callRejected(CallInvite callInvite){
-        JSObject ret = new JSObject();
-        callInvite.reject(getTwilioPluginInstance().getContext());
-        notifyCapacitor("callRejected", ret, false);
-    }
-
-    public static void callCanceled(){
+    public void handleCallCanceled(){
         JSObject ret = new JSObject();
         notifyCapacitor("callCanceled", ret, false);
+
+
     }
+
+
 
 
     //endregion

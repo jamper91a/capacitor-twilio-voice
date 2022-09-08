@@ -1,8 +1,10 @@
 import { WebPlugin } from '@capacitor/core';
 
 import type {TwilioVoiceOptions, TwilioVoicePlugin} from './definitions';
+import {SendDigitsOptions} from "./definitions";
 
 export class TwilioVoiceWeb extends WebPlugin implements TwilioVoicePlugin {
+
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -20,7 +22,7 @@ export class TwilioVoiceWeb extends WebPlugin implements TwilioVoicePlugin {
   }
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  sendDigits(code: string): Promise<void> {
+  sendDigits(options: SendDigitsOptions): Promise<void> {
     return Promise.resolve(undefined);
   }
 }
