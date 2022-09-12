@@ -1,4 +1,4 @@
-import {PluginListenerHandle} from "@capacitor/core";
+import type { PermissionState, PluginListenerHandle } from '@capacitor/core';
 
 export interface TwilioVoicePlugin {
   registerDevice(option: TwilioVoiceOptions): Promise<void>;
@@ -37,6 +37,9 @@ export interface TwilioVoicePlugin {
    * Removes all listeners
    */
   removeAllListeners(): Promise<void>;
+
+  checkPermissions(): Promise<PermissionStatus>;
+  requestPermissions(): Promise<PermissionStatus>;
 }
 export interface TwilioVoiceOptions {
   accessToken: string;
@@ -44,4 +47,9 @@ export interface TwilioVoiceOptions {
 
 export interface SendDigitsOptions {
   code: string;
+}
+
+export interface PermissionStatus {
+  // TODO: change 'location' to the actual name of your alias!
+  call: PermissionState;
 }

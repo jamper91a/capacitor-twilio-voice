@@ -1,10 +1,12 @@
 platform :ios, '13.0'
-
+source 'https://github.com/cocoapods/specs'
 def capacitor_pods
   # Comment the next line if you're not using Swift and don't want to use dynamic frameworks
   use_frameworks!
   pod 'Capacitor', :path => '../node_modules/@capacitor/ios'
   pod 'CapacitorCordova', :path => '../node_modules/@capacitor/ios'
+  pod 'TwilioVoice', '~> 6.4.2'
+
 end
 
 target 'Plugin' do
@@ -14,3 +16,6 @@ end
 target 'PluginTests' do
   capacitor_pods
 end
+
+
+

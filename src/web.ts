@@ -25,4 +25,20 @@ export class TwilioVoiceWeb extends WebPlugin implements TwilioVoicePlugin {
   sendDigits(options: SendDigitsOptions): Promise<void> {
     return Promise.resolve(undefined);
   }
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  async checkPermissions(): Promise<PermissionStatus> {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    return Promise.resolve(undefined);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  async requestPermissions(): Promise<PermissionStatus> {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    return Promise.resolve(undefined);
+  }
 }
