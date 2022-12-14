@@ -3,6 +3,8 @@ import Capacitor
 import TwilioVoice
 import PushKit
 import CallKit
+import UserNotifications
+
 /**
  * Please read the Capacitor iOS Plugin Development Guide
  * here: https://capacitorjs.com/docs/plugins/ios
@@ -47,6 +49,10 @@ public class TwilioVoicePlugin: CAPPlugin {
          * PushKit push notifications, and if your app decides not to report the received outdated push notifications to CallKit, iOS may
          * terminate your app.
          */
+        
+        
+        
+        
         self.twilioVoiceAppDelegate.plugin = self
         self.twilioVoiceAppDelegate.initializePushKit()
         
@@ -65,7 +71,55 @@ public class TwilioVoicePlugin: CAPPlugin {
          * In this case we've already initialized our own `TVODefaultAudioDevice` instance which we will now set.
          */
         TwilioVoiceSDK.audioDevice = audioDevice
+        
+        handleInternalnotifications()
     }
+    
+    @objc func handleInternalnotifications(){
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.credentialsUpdatedA(notification:)),
+                                               name: .credentialsUpdated,
+                                               object: nil)
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.credentialsInvalidatedA(notification:)),
+                                               name: .credentialsInvalidated,
+                                               object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.incomingPushReceivedA(notification:)),
+                                               name: .incomingPushReceived,
+                                               object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.incomingPushReceivedB(notification:)),
+                                               name: .incomingPushReceived2,
+                                               object: nil)
+    }
+    @objc public func credentialsUpdatedA(notification: NSNotification){
+        let credentials = (notification.object as? PKPushCredentials)!
+        credentialsUpdated(credentials: credentials)
+        
+    }
+    
+    @objc public func credentialsInvalidatedA(notification: NSNotification){
+        credentialsInvalidated()
+        
+    }
+    
+    @objc public func incomingPushReceivedA(notification: NSNotification){
+        let payload = (notification.object as? PKPushPayload)!
+        incomingPushReceived(payload: payload)
+        
+    }
+    
+    @objc public func incomingPushReceivedB(notification: NSNotification){
+        let object = (notification.object as? [String: Any])!
+        let payload = (object["payload"] as? PKPushPayload)!
+        let completion = (object["completion"] as? () -> Void)!
+        incomingPushReceived(payload: payload, completion: completion)
+        
+    }
+    
+    
     
     
     
@@ -79,6 +133,7 @@ public class TwilioVoicePlugin: CAPPlugin {
         let accessTokenP = call.getString("accessToken") ?? "accessToken"
         accessToken = accessTokenP
         registerTwilio(twilioToken: accessToken, cachedDeviceToken: deviceToken!)
+        call.resolve();
         
     }
     
@@ -489,4 +544,13 @@ extension TwilioVoicePlugin: AVAudioPlayerDelegate {
 }
 
 
-
+extension Notification.Name {
+    static var credentialsUpdated: Notification.Name {
+          return .init(rawValue: "credentialsUpdated") }
+static var credentialsInvalidated: Notification.Name {
+          return .init(rawValue: "credentialsInvalidated") }
+    static var incomingPushReceived: Notification.Name {
+              return .init(rawValue: "incomingPushReceived") }
+    static var incomingPushReceived2: Notification.Name {
+              return .init(rawValue: "incomingPushReceived2") }
+}

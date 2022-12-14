@@ -26,8 +26,8 @@ public class TwilioVoiceAppDelegate: NSObject,PKPushRegistryDelegate {
 
     
     func initializePushKit() {
-        voipRegistry.delegate = self
-        voipRegistry.desiredPushTypes = Set([PKPushType.voIP])
+        //voipRegistry.delegate = self
+        //voipRegistry.desiredPushTypes = Set([PKPushType.voIP])
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
